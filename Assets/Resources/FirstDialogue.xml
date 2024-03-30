@@ -1,0 +1,10 @@
+<dialogs>
+	<dialog>
+		<name>Имя 1</name>
+		<replica>Реплика 1</replica>
+	</dialog>
+	<dialog>
+		<name>Имя 2</name>
+		<replica>Реплика 2</replica>
+	</dialog>
+</dialogs>

@@ -15,7 +15,7 @@ public class DialoguePresenter : MonoBehaviour
 {
     [Header("Components")]
     [SerializeField] private DialogueView _dialogueView;
-    [SerializeField] private DialogueData[] _dialoguesArr;
+    [SerializeField] private TextAsset[] _dialoguesArr;
     private uint _currentDialogue;
     private Queue<string> _messageQueue = new Queue<string>();
     private Queue<string> _namesQueue = new Queue<string>();
@@ -49,17 +49,32 @@ public class DialoguePresenter : MonoBehaviour
         if (_state == DialoguePresenterState.Finish || !_playerInArea || !CanTalk)
             return;
 
-        for(int i = 0; i < _dialoguesArr[_currentDialogue].Messages.Length; i++)
-        {
-            _messageQueue.Enqueue(_dialoguesArr[_currentDialogue].Messages[i]);
-            _namesQueue.Enqueue(_dialoguesArr[_currentDialogue].Names[i]);
-        }
+        GetData(_dialoguesArr[_currentDialogue]);
+        //for(int i = 0; i < _dialoguesArr[_currentDialogue].Messages.Length; i++)
+        //{
+        //    _messageQueue.Enqueue(_dialoguesArr[_currentDialogue].Messages[i]);
+        //    _namesQueue.Enqueue(_dialoguesArr[_currentDialogue].Names[i]);
+        //}
 
         OnDialogueStart?.Invoke();
         CanTalk = false;
         _dialogueView.StartDialogue(_messageQueue.Dequeue(), _namesQueue.Dequeue());
         _state = DialoguePresenterState.Talk;
         _messagePrinting = true;
+    }
+
+    private void GetData(TextAsset textAsset)
+    {
+        List<string> names = new List<string>();
+        List<string> replicas = new List<string>();
+        var tuple = ReadDialogueData.Read(textAsset);
+        names = tuple.Item1;
+        replicas = tuple.Item2;
+        for (int i = 0; i < names.Count; i++)
+        {
+            _messageQueue.Enqueue(replicas[i]);
+            _namesQueue.Enqueue(names[i]);
+        }
     }
     public void NextMessage()
     {
