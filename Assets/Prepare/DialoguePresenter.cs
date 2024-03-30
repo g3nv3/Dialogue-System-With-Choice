@@ -3,11 +3,13 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.Events;
+using System.Xml;
 
 enum DialoguePresenterState
 {
     Await,
     Talk,
+    Choice,
     Finish
 }
 
@@ -19,6 +21,7 @@ public class DialoguePresenter : MonoBehaviour
     private uint _currentDialogue;
     private Queue<string> _messageQueue = new Queue<string>();
     private Queue<string> _namesQueue = new Queue<string>();
+    private DialogNode _currentNode;
 
     [Header("Events")]
     [SerializeField] private UnityEvent[] OnCurrentDialogueFinished;
@@ -50,35 +53,25 @@ public class DialoguePresenter : MonoBehaviour
             return;
 
         GetData(_dialoguesArr[_currentDialogue]);
-        //for(int i = 0; i < _dialoguesArr[_currentDialogue].Messages.Length; i++)
-        //{
-        //    _messageQueue.Enqueue(_dialoguesArr[_currentDialogue].Messages[i]);
-        //    _namesQueue.Enqueue(_dialoguesArr[_currentDialogue].Names[i]);
-        //}
 
         OnDialogueStart?.Invoke();
         CanTalk = false;
-        _dialogueView.StartDialogue(_messageQueue.Dequeue(), _namesQueue.Dequeue());
+        _dialogueView.StartDialogue(_currentNode.Message, _currentNode.Name);
         _state = DialoguePresenterState.Talk;
         _messagePrinting = true;
     }
 
     private void GetData(TextAsset textAsset)
     {
-        List<string> names = new List<string>();
-        List<string> replicas = new List<string>();
-        var tuple = ReadDialogueData.Read(textAsset);
-        names = tuple.Item1;
-        replicas = tuple.Item2;
-        for (int i = 0; i < names.Count; i++)
-        {
-            _messageQueue.Enqueue(replicas[i]);
-            _namesQueue.Enqueue(names[i]);
-        }
+        XmlDocument xmlDoc = new XmlDocument();
+        xmlDoc.LoadXml(textAsset.text); // Загрузите ваш XML файл
+        XmlNode rootDialogNode = xmlDoc.SelectSingleNode("/dialog");
+        _currentNode = ReadDialogueData.CreateDialogTree(rootDialogNode);
+ 
     }
     public void NextMessage()
     {
-        if (_state != DialoguePresenterState.Talk)
+        if (_state != DialoguePresenterState.Talk || _state == DialoguePresenterState.Choice)
             return;
 
         if (_messagePrinting)
@@ -87,21 +80,38 @@ public class DialoguePresenter : MonoBehaviour
             return;
         }
 
-        if (_messageQueue.Count > 0)
+
+        if (_currentNode.Children.Count == 0)
         {
-            _dialogueView.NextMessage(_messageQueue.Dequeue(), _namesQueue.Dequeue());
-            _messagePrinting = true;
-        }
-        else
             FinishDialogue();
+            return;
+        }
+
+        GoToChildMessage();
+    }
+
+    private void GoToChildMessage()
+    {
+        if (_currentNode.Children.Count == 1)
+        {
+            _currentNode = _currentNode.Children[0];
+            _dialogueView.NextMessage(_currentNode.Message, _currentNode.Name);
+            _messagePrinting = true;
+            return;
+        }
+
+        List<string> shortNames = new List<string>();
+        foreach (var child in _currentNode.Children)
+            shortNames.Add(child.ShortName);
+        _dialogueView.ActivateButtons(shortNames);
+        _state = DialoguePresenterState.Choice;
     }
 
     private void FinishDialogue()
     {
         _dialogueView.StopDialogue();
-        if (_currentDialogue <= OnCurrentDialogueFinished.Length
-                && OnCurrentDialogueFinished.Length > 0)
-            OnCurrentDialogueFinished[_currentDialogue].Invoke();
+        if(_currentNode.ActionId != null)
+            OnCurrentDialogueFinished[(int)_currentNode.ActionId].Invoke();
 
         _state = DialoguePresenterState.Await;
         _currentDialogue++;
@@ -109,5 +119,24 @@ public class DialoguePresenter : MonoBehaviour
         {
             _state = DialoguePresenterState.Finish;
         }
+    }
+
+    public void SwitchBranch(int index)
+    {
+        Debug.Log("Button clicked " + index.ToString());
+        _currentNode = _currentNode.Children[index];
+        _state = DialoguePresenterState.Talk;
+        _dialogueView.NextMessage(_currentNode.Message, _currentNode.Name);
+        _messagePrinting = true;
+    }
+
+    public void Action0()
+    {
+        Debug.Log("Завершена ветка 3");
+    }
+
+    public void Action1()
+    {
+        Debug.Log("Завершена ветка 4");
     }
 }

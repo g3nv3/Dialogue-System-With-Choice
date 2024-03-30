@@ -1,6 +1,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 using System.Xml;
+
+
 public static class ReadDialogueData
 {
     public static (List<string>, List<string>) Read(TextAsset textAsset)
@@ -23,4 +25,27 @@ public static class ReadDialogueData
         }
         return (names, replicas);
     }
+
+    static public DialogNode CreateDialogTree(XmlNode dialogNode)
+    {
+        DialogNode node = new DialogNode();
+
+        node.Name = dialogNode.SelectSingleNode("name").InnerText;
+        node.Message = dialogNode.SelectSingleNode("replica").InnerText;
+        XmlNode actionNode = dialogNode.SelectSingleNode("action");
+        if (actionNode != null)
+            node.ActionId = int.Parse(actionNode.Attributes["id"].Value);
+        XmlNode shortNameNode = dialogNode.SelectSingleNode("short_name");
+        if(shortNameNode != null)
+            node.ShortName = shortNameNode.InnerText;
+
+        foreach (XmlNode childNode in dialogNode.SelectNodes("dialog"))
+        {
+            DialogNode child = CreateDialogTree(childNode);
+            node.Children.Add(child);
+        }
+
+        return node;
+    }
 }
+

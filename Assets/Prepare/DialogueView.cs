@@ -3,6 +3,7 @@ using TMPro;
 using UnityEngine;
 using Prepare;
 using System;
+using System.Collections.Generic;
 
 public class DialogueView : MonoBehaviour
 {
@@ -10,8 +11,12 @@ public class DialogueView : MonoBehaviour
     [SerializeField] private TextMeshProUGUI _messageText;
     [SerializeField] private TextMeshProUGUI _nameText;
     [SerializeField] private Animator _animator;
-    public event Action OnFinishMessage;
+    [SerializeField] private GameObject[] _buttons;
+    [SerializeField] private TextMeshProUGUI[] _buttonsText;
+    private DialoguePresenter _dialoguePresenter;
     private bool _isDialogueRun;
+    
+    public event Action OnFinishMessage;
 
     [Header("Animation")]
     [SerializeField] private float betweenHalf = 0.05f;
@@ -28,6 +33,11 @@ public class DialogueView : MonoBehaviour
     {
         if (_isDialogueRun)
             _textAnimator.TextAnimatorUpdate();
+    }
+
+    public void SetPresenter(DialoguePresenter presenter)
+    {
+        _dialoguePresenter = presenter;
     }
     public void StartDialogue(string message, string name)
     {
@@ -67,6 +77,19 @@ public class DialogueView : MonoBehaviour
         _textAnimator.StartAnimation(text);
     }
 
+    public void HideButtons()
+    {
+        foreach (var button in _buttons)
+            button.SetActive(false);
+    }
+    public void ActivateButtons(List<string> names)
+    {
+        for (int i = 0; i < names.Count; i++)
+        {
+            _buttons[i].SetActive(true);
+            _buttonsText[i].text = names[i];
+        }
+    }
 
     private void HideDialogue()
     {
@@ -89,4 +112,9 @@ public class DialogueView : MonoBehaviour
         _textAnimator.OnAnimationFinished -= FinishMessage;
     }
 
+    public void ClickOnButtonChoice(int indexButton)
+    {
+        HideButtons();
+        _dialoguePresenter.SwitchBranch(indexButton);
+    }
 }
