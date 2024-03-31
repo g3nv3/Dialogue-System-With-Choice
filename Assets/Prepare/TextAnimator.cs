@@ -8,7 +8,7 @@ using System;
 
 namespace Prepare
 {
-    public class TextAnimator
+    public class TextAnimator 
     {
         public event Action OnAnimationFinished;
 

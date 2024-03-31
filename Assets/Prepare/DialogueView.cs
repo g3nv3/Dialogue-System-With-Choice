@@ -1,12 +1,13 @@
 using System.Collections;
 using TMPro;
 using UnityEngine;
-using Prepare;
 using System;
 using System.Collections.Generic;
 
 public class DialogueView : MonoBehaviour
 {
+    private Prepare.TextAnimator _textAnimator;
+
     [Header("Components")]
     [SerializeField] private TextMeshProUGUI _messageText;
     [SerializeField] private TextMeshProUGUI _nameText;
@@ -22,11 +23,10 @@ public class DialogueView : MonoBehaviour
     [SerializeField] private float betweenHalf = 0.05f;
     [SerializeField] private float betweenChar = 0.03f;
     [SerializeField] private float smoothTime = 0.1f;
-    private TextAnimator _textAnimator;
 
     private void Awake()
     {
-        _textAnimator = new TextAnimator(_messageText, betweenHalf, betweenChar, smoothTime);
+        _textAnimator = new Prepare.TextAnimator(_messageText, betweenHalf, betweenChar, smoothTime);
     }
 
     private void Update()
