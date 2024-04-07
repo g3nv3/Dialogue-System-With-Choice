@@ -1,0 +1,28 @@
+<dialog>
+	<name>Олег</name>
+	<message>Привет, я Олег</message>
+
+	<dialog>
+		<name>Антон</name>
+		<message>Привет, а я Антон</message>
+
+		<dialog>
+			<short_name>Попрощаться с Антоном</short_name>
+			<name>Олег</name>
+			<message>Мне пора</message>
+			<action id="0"></action>
+		</dialog>
+		<dialog>
+			<short_name>Спросить как у Антона дела</short_name>
+			<name>Олег</name>
+			<message>Как дела?</message>
+
+			<dialog>
+				<name>Антон</name>
+				<message>Мне пора идти</message>
+				<action id="1"></action>
+			</dialog>
+			
+		</dialog>
+	</dialog>
+</dialog>
